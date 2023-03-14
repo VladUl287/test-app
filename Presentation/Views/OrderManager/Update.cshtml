@@ -1,0 +1,122 @@
+﻿@model Presentation.ViewModels.UpdateOrder;
+
+@{
+    ViewData["Title"] = "Обновление заказа";
+}
+
+<div class="container">
+    <input type="number" name="id" id="id" hidden class="d-none" asp-for="Order.Id" />
+
+    <div class="form-group mt-2">
+        <label for="number" class="d-block">Номер</label>
+        <input type="text" name="number" id="number" class="w-100" asp-for="Order.Number" />
+    </div>
+
+    <div class="form-group mt-2">
+        <label for="provider" class="d-block">Поставщики</label>
+        <select id="provider" class="w-100">
+            @foreach (var provider in Model.Providers)
+            {
+                if (Model.Order.Provider?.Id == provider.Id)
+                {
+                    <option value="@provider.Id" selected>@provider.Name</option>
+                }
+                else
+                {
+                    <option value="@provider.Id">@provider.Name</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="form-group mt-2">
+        <label for="date" class="d-block">Дата</label>
+        <input type="datetime-local" name="date" id="date" asp-for="Order.Date" />
+    </div>
+
+    <div class="form-group mt-2">
+        <label class="d-block"><b>Добавление элементов заказа</b></label>
+        <div class="row">
+            <div class="col">
+                <label for="name">Наименование</label>
+                <input type="text" name="name" id="name" class="w-100">
+            </div>
+            <div class="col">
+                <label for="unit">Unit</label>
+                <input type="text" name="unit" id="unit" class="w-100">
+            </div>
+            <div class="col">
+                <label for="quantity">Количество</label>
+                <input type="text" name="quantity" id="quantity" class="w-100">
+            </div>
+        </div>
+
+        <button class="btn-sm btn-warning d-block mt-1" id="addOrderItem">+ Добавить</button>
+    </div>
+
+    <div class="form-group mt-2">
+        <h4 for="order-items" class="d-block">Элементы заказа</h4>
+        <div class="form-group order-items"></div>
+    </div>
+
+    <input type="submit" value="Обновить" class="btn btn-primary d-block mt-2 w-25" style="margin-left: auto" id="createOrder" />
+</div>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script>
+    const orderItems = []
+
+    function fillOrderItems() {
+        orderItems.forEach((orderItem, index) => {
+            const orderCard = createOrderItemCard(orderItem.name, orderItem.unit, orderItem.quantity, index)
+            $(".order-items").append(orderCard)
+        })
+    }
+
+    function deleteOrderItem(index) {
+        orderItems.splice(index, 1);
+        $(".order-items").empty();
+        fillOrderItems();
+    }
+
+    $(document).ready(function () {
+        @foreach (var item in Model.Order.OrderItems)
+        {
+            @:orderItems.push({ name: "@item.Name", unit: "@item.Unit", quantity: "@item.Quantity" })
+        }
+
+        fillOrderItems();
+
+        $("#addOrderItem").on("click", function () {
+            const orderItem = {
+                name: $("#name").val(),
+                unit: $("#unit").val(),
+                quantity: $("#quantity").val(),
+            }
+
+            orderItems.push(orderItem);
+
+            const orderCard = createOrderItemCard(orderItem.name, orderItem.unit, orderItem.quantity, orderItems.length - 1)
+
+            $(".order-items").append(orderCard)
+        });
+
+        $("#createOrder").on("click", function () {
+            const formDate = new FormData();
+            formDate.append("Id", $("#id").val());
+            formDate.append("Number", $("#number").val());
+            formDate.append("Date", $("#date").val());
+            formDate.append("ProviderId", $("#provider").val());
+            orderItems.forEach((item, index) => {
+                formDate.append(`OrderItems[${index}].name`, item.name);
+                formDate.append(`OrderItems[${index}].unit`, item.unit);
+                formDate.append(`OrderItems[${index}].quantity`, item.quantity);
+            })
+
+            $.ajax({ type: 'POST', url: "/OrderManager/Update", data: formDate, processData: false, contentType: false })
+                .done(function (response) {
+                    window.location.href = "/Main";
+                });
+        })
+    });
+</script>

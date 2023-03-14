@@ -1,0 +1,33 @@
+@model Application.Dtos.OrderDto;
+
+@{
+    ViewData["Title"] = "Прсмотр заказа";
+}
+
+<div class="container mt-3">
+    <h3>Номер: @Model.Number</h3>
+    <div>
+        <p><b>Дата: </b>@Model.Date</p>
+        <p><b>Поставщик: </b>@Model.Provider?.Name</p>
+
+        <h4>Элементы заказа</h4>
+        @foreach (var item in Model.OrderItems)
+        {
+            <div class="my-2" style="background-color: #80808033; padding: .5em; border-radius: .2em">
+                <p><b>Наименование: </b>@item.Name</p>
+                <p><b>Unit: </b>@item.Unit</p>
+                <p><b>Количество: </b>@item.Quantity</p>
+            </div>
+        }
+
+        <div class="d-inline-block">
+            @Html.ActionLink("Редактировать", "Update", "OrderManager", new { id = Model.Id }, new { @class="btn btn-info" })
+        </div>
+        <div class="d-inline-block">
+            @using (Html.BeginForm("DeleteOrder", "OrderManager", new { id = Model.Id }, FormMethod.Post))
+            {
+                <input type="submit" value="Удалить" class="btn btn-danger" />
+            }
+        </div>
+    </div>
+</div>
